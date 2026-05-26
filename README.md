@@ -1,316 +1,448 @@
 # Best no-code Conversion API
 
-I have set up the Meta [Conversions API](/conversion-api) enough times, the no-code way and the engineer way, to tell you the dirty secret of this category. **Almost every "no-code CAPI tool" solves the same easy problem and ignores the same hard one.**
+Let's be real. The CAPI market got commoditized overnight on April 15, 2026 when Meta shipped 1-click CAPI inside Events Manager. Every paid CAPI tool that priced like $199 to $499 a month for "we send the events for you" got ambushed.
 
-The easy problem: getting events from your store to Meta and Google without a developer. Genuinely solved. Pick almost any tool on this list, install a Shopify app, paste a pixel ID, done in minutes. **That part is a commodity now.**
+Then Google shipped Tag Gateway in January 2026. Free. Google-managed. No GTM container, no Cloud Run bill.
 
-The hard problem: **what is actually in those events.** Roughly a quarter to a third of typical web traffic is bots. Most of these tools forward all of it. And every one of them improves "event match quality", which sounds great until you realize a better match on a bot event just means Meta learns the bot more confidently.
+So why are people still spending money on CAPI tools?
 
-This is not a "which tool is easiest to install" post. They are all easy. This is a post about **which tools send Meta clean signal and which ones send it well-formatted noise**. [DataCops](/meta-conversion-api) is the answer to the second question, and the rest of this is the honest tour. I will assess most of these tools fairly with no pivot, because a listicle where all 18 entries end with "and DataCops fixes this" reads like an ad, and you would be right to discount it. See also [Fraud traffic validation](/fraud-traffic-validation), [Best Meta CAPI tools 2026](/resources/best-meta-capi-tools-2026), and [Best Shopify CAPI tools 2026](/resources/best-shopify-capi-tools-2026).
+Because the easy buttons only solve half the problem. Meta's 1-click CAPI fans out to Meta. Google's Tag Gateway fans out to Google. Neither one filters bots. Neither one stitches identity across iOS Safari ITP. Neither one does TikTok, LinkedIn, or Pinterest. And nobody at Meta or Google is helping you fix your event match quality when it sits at 5.2 and your CPA is 38% over target.
+
+I tested 25 plus tools in this category over the last 6 weeks. Shopify stores, B2B SaaS funnels, agency multi-account setups. The results are messier than the listicles suggest. Some of the cheapest tools are the most painful to set up. Some of the priciest tools have shipping that hasn't kept pace with the platform shifts. And the no-code positioning means very different things to different vendors.
+
+Here's the unfiltered version. No vendor pitches. Just what each one actually does, what's broken, and what it costs.
+
+---
 
 ## Quick stuff people keep asking
 
-**What is a no-code conversion API tool?** Software that sends server-side conversion events to ad platforms without you writing code or building a server-side container. You install an app or paste a snippet, it relays purchases, leads and signups to Meta, Google and others.
+**What is a no-code Conversion API tool?** A no-code CAPI tool sends server-side conversion events to Meta, Google, TikTok, or LinkedIn without you writing code, deploying a server, or maintaining a GTM container. You connect your store or site, map events through a UI, and the tool does the fan-out. The "no-code" claim is a spectrum. Some tools require zero technical setup. Others require you to install a Shopify app and configure a few mappings. A few still need 30 to 60 minutes of plumbing.
 
-**Do I need a developer to set up Meta CAPI?** No. In 2026, a no-code tool gets you live in minutes. You need a developer only if you want custom events, a custom data layer, or a self-managed [server-side GTM](/alternative/server-side-gtm-alternative) container.
+**Do I need a developer to set up Meta CAPI?** Not anymore. As of April 15, 2026, Meta ships a 1-click CAPI flow inside Events Manager. You can also use Google Tag Gateway, a Shopify app like Aimerce or Elevar, or a managed service like Stape. The catch is that the easy paths only cover Meta. If you also need Google, TikTok, and LinkedIn working off the same event stream, you still want a multi-platform router.
 
-**What is the easiest way to send server-side conversions to Meta?** A no-code app that installs directly on your store platform. Shopify in particular has a dozen one-click options. Easy is not the differentiator anymore. Clean is.
+**What is the best CAPI tool for Shopify?** Depends on your store size. Sub 1,000 orders a month, the free Shopify pixel plus Meta's 1-click CAPI plus Google's Tag Gateway will get you 80% of the way there. Above that, the Shopify-native tools (Elevar, Aimerce, Littledata, Polar Analytics) start earning their fees through checkout-extensibility data layers, ClickID capture from express checkouts, and longer attribution windows.
 
-**Is [server-side GTM](/resources/best-server-side-gtm-alternative) no-code?** Not really. A managed sGTM host removes the hosting work, but configuring tags, triggers and consent signals is technical. If you want true no-code, you want a managed CAPI tool, not a container.
+**How much does a Conversion API tool cost?** Free at the bottom (Meta's 1-click, Google Tag Gateway, Stape free tier, DataCops free tier). $7.99 to $99 a month at the SMB end. $200 to $500 a month for mid-market multi-platform routers. $1,000 to $10,000 a month for enterprise attribution platforms like Northbeam, SegmentStream, and Hyros. Pricing is rarely linear. Most tools at the higher end gate themselves behind sales calls.
 
-**What is the best CAPI tool for Shopify?** Several are Shopify-native and fine for relay. The better question is which one filters bot traffic before it reaches Meta, because Shopify product pages attract scrapers and inventory bots. That narrows the field fast.
+**What is the difference between a no-code CAPI tool and server-side GTM?** Server-side GTM (Google's sGTM) is the raw building block. You run a container, you write triggers, you handle deduplication yourself, you eat the Cloud Run bill. A no-code CAPI tool wraps all of that and gives you a UI. The tradeoff is flexibility. sGTM does anything. A no-code tool does what its UI lets you do.
 
-**How much does a Conversion API tool cost?** Anywhere from free to $5,000 a month. Pure Shopify relays sit around $99 to $300. Attribution platforms run $1,500-plus. First-party tools with bot filtering sit in the affordable middle.
+---
 
-**Does Google Ads have a Conversion API?** Yes, through Enhanced Conversions and the Google Ads API. Most no-code tools that do Meta CAPI also fan out to Google Enhanced Conversions.
+## The decision matrix before we start
 
-**What is the difference between client-side and [server-side tracking](/resources/best-server-side-tracking-2026)?** Client-side fires from the browser, where ad blockers and bots interfere. Server-side fires from a server, which survives blocking better but, crucially, does not clean the data unless the tool explicitly does so.
+Server-side tracking adoption hit roughly 20 to 25% of SMBs by 2025 per Usercentrics, and is projected to hit 70% by 2027. 70% of marketers had already moved by 2024 per Gartner. The gains are real. Server-side cuts data loss by roughly 41% on average, extends first-party cookie life from 7 days under ITP to up to 400 days, and bypasses ad blockers entirely.
 
-## The gap: everyone improves the match, nobody checks the human
+Meta's own data says CAPI users see 17.8% lower cost per result vs Pixel-only. The IAB pegs two-thirds of advertisers as ROAS-positive after switching. Improving event match quality from 8.6 to 9.3 cuts CPA 18% and lifts ROAS 22% per Triple Whale benchmarks.
 
-Here is the structural failure that runs through almost this entire category.
+So the question is not whether to do CAPI. It's which tool fits your stack. Let me break it into three tiers.
 
-A CAPI tool's headline metric is event match quality. Higher EMQ means Meta can tie your event to a real Facebook profile with more confidence. Every vendor markets it. And it genuinely helps, when the event is from a person.
+---
 
-Now run the bot number. Invalid traffic on typical web properties is 24 to 31%. A bot fires an add-to-cart. The CAPI tool relays it. It enriches it with hashed email, IP, device data. It pushes the EMQ up. It delivers a beautifully matched, high-confidence conversion event to Meta. The event is fake. You just taught Meta's algorithm, with high confidence, that this bot pattern converts.
+## Tier 1: Shopify-native CAPI apps (the easy path for stores)
 
-That is the trap. Better EMQ on a contaminated stream is not better. It is more efficient poisoning. The tool did its job perfectly and made your ad account worse.
+These tools live as Shopify apps. They install in minutes, they work with checkout extensibility, and they're priced in the $50 to $300 range.
 
-Make it concrete. PillarlabAI ran a honeypot on their signup funnel to see what was real. 3,000 signups. 77% fraudulent. 650 accounts on a single device fingerprint. One machine wearing 650 faces. A standard no-code CAPI tool would have relayed all 650, enriched them, matched them, and reported 650 conversions. Meta would have gone looking for 650 more people like them. There are no people like them. There is one bot.
+**1. Aimerce**
 
-This is Layer 5, the expensive one. Meta and Google optimize toward whatever you confirm. Confirm bots and they hunt bots. ROAS erodes, you raise budgets, the real humans get more expensive because part of your spend is now a bot-finding subsidy. Garbage in, garbage optimized, garbage out.
+The Good: Extends Shopify visitor tracking from 24 hours and 7 days up to 1 year, recovering long-window CAPI matches that most pixels lose. Captures express-checkout ClickIDs (Shop Pay, Apple Pay) that vanish from native pixels. One-click Meta and Klaviyo integrations with reported lifts of up to 40% on cart-abandonment email revenue. Trustpilot and Shopify reviews skew highly positive at 7-figure DTC scale.
 
-And in the EU it doubles. A consent banner is a third-party script. uBlock and Brave block it 30 to 40% of the time. When it is blocked, your client-side pixel fires with no consent state, or it fires into the void on an SPA route change before the banner resolved. Most CAPI tools assume the consent signal arrived. When it did not, they either lose the event or send it without a legal basis.
+Frustrations: No free version, no free trial. Base tier starts at $299 a month, which prices out smaller stores. Shopify-only. No headless support.
 
-Root cause: third-party scripts collecting mixed, unfiltered data with no isolation before it leaves your infrastructure. The architectural fix is first-party collection, bot filtering at ingestion, and two data tiers split at the source. Anonymous session data flows unconditionally because it is always legal. Identifiable data waits for consent. That is DataCops, and it is why it tops this list.
+Wish List: A starter tier for stores under 1,000 orders. Non-Shopify support.
 
-## The rankings
+Value for Money: 7.5/10. Strong if you're at 7-figures DTC on Shopify. Painful below that.
 
-Tiered. DataCops first, then everyone else grouped by what they actually are.
+Pricing: $299/mo base. Quote-only above that.
 
-### Tier 1: first-party architecture with bot filtering
+---
 
-**DataCops.**
+**2. Littledata**
 
-**What it is:** a [first-party data](/resources/what-is-first-party-data-the-complete-2025-definition) platform that collects on your own subdomain, filters bots at ingestion, and fans clean events out to Meta, Google, TikTok and LinkedIn.
+The Good: Strongest Shopify-checkout-extensibility data layer in the market. Fixes the inconsistent tracking that Shopify's native pixel leaves behind, especially around subscriptions, refunds, and Recharge. Strong audit logs.
 
-**What it does well:** this is the only tool here that solves the hard problem instead of the easy one. Bot filtering runs against a 361.8 billion-plus IP database before any event reaches the conversion API, so datacenter, VPN, proxy and Tor traffic gets caught at the door. Two-tier isolation means anonymous session analytics flow unconditionally while identifiable data waits for consent, which is the correct legal architecture for EU traffic, not a bolt-on. SignUp Cops adds identity intelligence right at the signup form. Setup is genuinely no-code and takes minutes.
+Frustrations: Pure per-order pricing punishes high-AOV, low-volume brands. A $99 Recharge subscriber costs the same to track as a $9 t-shirt. Checkout extensibility migration was bumpy for some stores in 2025.
 
-**Where it breaks:** SOC 2 Type II is in progress, not finished, so a regulated buyer who needs the attestation today may have to wait. It is a newer brand than [Triple Whale](/alternative/triple-whale-alternative) or Hyros. Shared CAPI across every platform is in verification, not fully live. DataCops surfaces fraud context, it does not claim to block 100% of bots.
+Wish List: Tiered AOV pricing. Faster checkout-extensibility upgrade path.
 
-**Value for money:** 9/10.
+Value for Money: 7.5/10. Best-in-class for subscription DTC. Less obvious for one-shot AOV stores.
 
-**Pricing:** free tier of 2,000 signup verifications a month, paid tiers in the affordable middle of the category.
+Pricing: From $50/mo, scaling per order.
 
-### Tier 2: clean data architecture, no native CAPI loop
+---
 
-**Snowplow.**
+**3. Elevar**
 
-**What it is:** open-source first-party event collection and analytics infrastructure.
+The Good: Powers conversion tracking for 6,500+ DTC Shopify brands. Preferred Shopify checkout-extensibility partner. 4.6 stars on the Shopify App Store. Multi-platform fan-out covers Meta, Google, TikTok, Pinterest.
 
-**What it does well:** the best data quality and consent architecture in this whole list. Server-side collection without mandatory cookies, a Consent Tracking Accelerator that natively retains anonymous session events after "Reject All", and IAB/ABC bot enrichment with a published, auditable methodology. This is what doing it right looks like.
+Frustrations: Setup is genuinely complicated. Most brands end up paying $1,000+ for Expert Installation or $500/mo for ongoing tag support. The UI assumes GTM literacy.
 
-**Where it breaks:** it is a pipeline, not a CAPI relay, so it does not send events to Meta or Google natively. You need a separate integration layer to close the loop. Layer 3 is only partial because the initial consent signal still comes from a client-side CMP that can be blocked. And the cost is real: BDP Cloud starts at $800 a month, growth contracts run $30,000 to $60,000 a year, and the free Community Edition needs a two-person engineering sprint to stand up.
+Wish List: True self-serve onboarding for non-technical merchants.
 
-**Value for money:** 7/10.
+Value for Money: 7.5/10. Worth the cash if you can stomach the setup curve. Otherwise hire the install.
 
-**Pricing:** Community Edition free and self-hosted, BDP Cloud from $800/month.
+Pricing: From $50/mo. $1,000+ Expert Install. $500/mo Tag Health.
 
-### Tier 3: server-side relays and sGTM hosts
+---
 
-**Google Tag Manager Server-Side.**
+**4. Triple Whale**
 
-**What it is:** Google's server-side tagging framework, the technical backbone of half this category.
+The Good: Triple Pixel plus Sonar Send (Klaviyo flow enrichment) bundled at $179/mo annual. Klaviyo revenue lift around 14.2% on average. Strong dashboard for paid-ads operators. Sub-60-second campaign data latency.
 
-**What it does well:** the highest capability ceiling here. With engineering time you can build almost anything.
+Frustrations: Pricing scales fast. Above $5M GMV it becomes GMV-based and quoted by sales. Sub-7-figure brands routinely flag it as overpriced. Occasional dashboard flakiness on big sales days.
 
-**Where it breaks:** it is not no-code, despite often being listed as if it were. The client-side GTM snippet still loads from Google's tag-manager domain in the browser and gets blocked by ad blockers, so Layer 3 is unsolved. It has no native bot filtering, so Layer 4 is wide open and the old community workarounds are unmaintained. [Consent Mode v2](/resources/google-consent-mode-v2-a-complete-implementation-guide) propagation fails silently when misconfigured, which is common. DIY total cost of ownership is $8,000 to $25,000 in year one.
+Wish List: Flat-fee mid-market tier. Better data freshness during peak.
 
-**Value for money:** 6/10 for agencies with engineers, 3/10 for everyone else.
+Value for Money: 6.5/10. Solid at the SMB tier. Brutal at scale.
 
-**Pricing:** GTM free, Cloud Run hosting $50-$200/month, real first-year cost $8,000-$25,000 DIY.
+Pricing: $179/mo annual entry. GMV-based above $5M.
 
-**Google Tag Gateway.**
+---
 
-**What it is:** a free Google routing layer that extends first-party cookie lifetime for Google tags.
+**5. Polar Analytics**
 
-**What it does well:** it is genuinely free, and it recovers Google-platform events lost to ad blockers with a reported 11% conversion uplift. For a Google-only advertiser that is a clean win.
+The Good: Warehouse-native unified analytics plus AI agents. Supports 3,715+ merchants across 45 countries. Strong cross-channel reporting beyond Shopify.
 
-**Where it breaks:** it is Google-only. No Meta CAPI, no TikTok, no LinkedIn. The client-side GTM snippet is still blockable, so Layer 3 is not solved upstream. No IVT filtering at all, so bot events route straight through to Google.
+Frustrations: Pricing is entirely behind a demo wall. Published starts cited around $470/mo, but the BI module alone runs $510+/mo per third-party benchmarks.
 
-**Value for money:** 8/10 for Google-only advertisers, 3/10 for multi-platform.
+Wish List: Public pricing. Cheaper SMB entry.
 
-**Pricing:** free.
+Value for Money: 7.5/10. Worth a demo if you're at $5M+ GMV.
 
-**[TAGGRS](/alternative/taggrs-alternative).**
+Pricing: ~$470/mo entry, demo required.
 
-**What it is:** a managed server-side GTM host with strong EU data residency.
+---
 
-**What it does well:** better observability than most managed hosts and European-only data centres, a real selling point for EU brands. The 2026 Enhanced Tracking Script V3 adds ad-blocker event masking.
+**6. Analyzify**
 
-**Where it breaks:** it is infrastructure, so cookieless mode and consent handling are GTM config choices it does not own. No bot or IVT filtering, so Layer 4 and 5 are open. The free tier caps at 10,000 requests a month, roughly one day of traffic, so treat it as a trial. EU data centres mean latency for US-primary traffic.
+The Good: Done-For-You setup is the headline differentiator. Implementation is included. Merchants don't have to wire GTM, GA4, and CAPI themselves. Fast time-to-value.
 
-**Value for money:** 7/10.
+Frustrations: Multiple negative reviews allege quadruplicate GA4 properties were configured by the app, corrupting analytics and causing weeks of cleanup. Shopify-only.
 
-**Pricing:** free up to 10,000 requests/month, paid from about €22/month.
+Wish List: Better post-install QA. Property-conflict detection.
 
-**Aimerce.**
+Value for Money: 7/10. Useful if you trust the install. Painful if it goes sideways.
 
-**What it is:** a Shopify-focused server-side CAPI relay.
+Pricing: From $200/mo.
 
-**What it does well:** strong client-side cookie recovery, so it claws back events on cookieless browsers and iOS 17-plus.
+---
 
-**Where it breaks:** no bot filtering, so it relays bot-generated Shopify orders to CAPI verbatim, and because it improves match quality, it is a high-fidelity bot pipeline. For EU traffic it sends CAPI events regardless of consent state, which without a separate legal basis is a [GDPR](/resources/gdpr-for-marketers-a-practical-checklist) Article 6 exposure. Shopify-exclusive.
+**7. TrackBee**
 
-Pricing climbs: $299/month includes 1,000 orders, then $0.10 per extra order, so 5,000 orders is roughly $699.
+The Good: Built specifically for Shopify. No GTM, no cloud server, no dev work. Connects to the Shopify backend, captures funnel events server-side. Customer support praised for sub-3-minute reply times. 30-day free trial.
 
-**Value for money:** 7/10 for raw relay, 3/10 for signal quality.
+Frustrations: Switched to a more expensive subscription model that priced out entry-level shops. Trustpilot reviewers flag a friction-heavy refund and cancellation process.
 
-**Pricing:** Essential $299/month, Growth by quote.
+Wish List: Lower entry price or pay-per-tracked-sale plan. Friendlier cancellation.
 
-**[Littledata](/alternative/littledata-alternative).**
+Value for Money: 6.5/10. Solid product. Pricing model alienates the smallest stores.
 
-**What it is:** a [Shopify server-side tracking](/resources/shopify-server-side-tracking) tool with a strong "no GTM" pitch.
+Pricing: From €79/mo entry.
 
-**What it does well:** genuine Shopify tracking recovery, fast and cheap at low order volume, recovering 15 to 25% more conversion events.
+---
 
-**Where it breaks:** no bot filtering, so the recovered events include whatever bot fraction was in the original stream. The consent gate waits for a CMP signal, and a blocked CMP script means no tracking at all for 30 to 40% of Brave and uBlock users. Shopify-only. The "no GTM" simplicity also means no custom event flexibility.
+## Tier 2: Multi-platform CAPI routers (the agency and SaaS pick)
 
-**Value for money:** 6/10.
+These tools are not Shopify apps. They sit in front of any web stack. They route events to Meta, Google, TikTok, LinkedIn, and others.
 
-**Pricing:** from $99/month, scaling with order volume.
+**8. Datahash**
 
-**[TrackBee](/alternative/trackbee-alternative).**
+The Good: No-code 15-minute setup for Meta, Google, Snapchat, TikTok, X, and LinkedIn CAPI. Broadest channel breadth in the no-code category. Decent EMQ optimization.
 
-**What it is:** a Shopify CAPI relay and sGTM provider.
+Frustrations: Pricing is opaque. No public tiers. Trial-to-paid path is mostly via the Meta CAPI Gateway flow. Smaller review footprint than Stape or Elevar.
 
-**What it does well:** a fast sGTM-equivalent setup for Shopify merchants.
+Wish List: Public pricing. More case studies.
 
-**Where it breaks:** Shopify-only, structurally locked to one platform. No bot filtering, so bot add-to-cart and checkout events relay as real conversions, and Shopify product pages are bot magnets. No Consent Mode v2 integration, which EU advertisers have needed since March 2024. Per-store [pricing](/pricing) at €100/month stacks badly for multi-brand merchants.
+Value for Money: 6.5/10. Easy setup. Hard to compare.
 
-**Value for money:** 5/10.
+Pricing: Quote only.
 
-**Pricing:** €100/month per store.
+---
 
-**SignalBridge.**
+**9. Cometly**
 
-**What it is:** a server-side tracking relay with bundled funnel analytics.
+The Good: Built specifically for paid-ads teams. AI multi-touch attribution plus sub-60-second campaign data latency. Strong creative-level attribution.
 
-**What it does well:** it markets bot filtering as a bundled feature, which is above average for the category, plus it includes analytics and ad spend sync at a low entry price.
+Frustrations: Pricing is gated behind sales. No public tiers. Reports range from $199 to $499/mo, scaling with ad spend (Core $20k to $40k spend, Pro above).
 
-**Where it breaks:** the bot filtering has zero published methodology, no catch rate, no IAB spider list documentation, so you cannot audit what it cleans. The $29/month tier covers only 20K events, a loss-leader number. No post-rejection anonymous session path. No Magento or [BigCommerce](/resources/bigcommerce-conversion-tracking-setup).
+Wish List: Public pricing. Self-serve trial.
 
-**Value for money:** 6/10.
+Value for Money: 7.5/10. Worth the cash for media buyers running $50k+ a month.
 
-**Pricing:** from $29/month for 20K events.
+Pricing: $199 to $499/mo, sales-led.
 
-**Analyzify.**
+---
 
-**What it is:** a Shopify analytics and CAPI tool.
+**10. Tracklution**
 
-**What it does well:** strong event capture, claiming 99% purchase tracking accuracy, and the base subscription includes professional implementation.
+The Good: Five-minute plug-and-play setup that adds Meta, TikTok, and Google CAPIs without touching a GTM server container. Bundles a CMP. EU-friendly.
 
-**Where it breaks:** that 99% is capture rate, not data quality. No IVT filtering, so bot purchases forward alongside real ones. The flat annual fee looks cheap until you add [Stape](/alternative/stape-alternative) hosting ($1,490) or Google Cloud setup ($2,790) and end up at $3,000-$4,000 a year. The February 2026 platform upgrade was forced on existing customers with limited notice.
+Frustrations: More limited event transformation and data manipulation than full sGTM containers. You trade flexibility for simplicity.
 
-**Value for money:** 6/10.
+Wish List: Optional sGTM bridge for power users.
 
-**Pricing:** $749-$945/year base, plus add-ons.
+Value for Money: 7/10. Good no-code path for non-Shopify stacks.
 
-**Conversios.**
+Pricing: From $99/mo.
 
-**What it is:** a modular CAPI tool with Google Cloud included on its server-side plan.
+---
 
-**What it does well:** affordable and modular at low order volumes.
+**11. TAGGRS**
 
-**Where it breaks:** no bot filtering, and order-level billing means you pay for bot orders the same as real ones. The 2026 plan rename added confusion without features. Usage overage at $0.15-$0.35 per order makes seasonal bills spike. CNAME setup is DIY.
+The Good: EU-based infrastructure. Explicit selling point for GDPR-sensitive shops who don't want US data processing. Decent multi-platform fan-out.
 
-**Value for money:** 5/10.
+Frustrations: Feature-thin vs Stape. Third-party comparisons cite weak debugging and monitoring tools. Smaller community.
 
-**Pricing:** Server Side Tracking from $60/month plus per-order overage.
+Wish List: Better debugging UI. Faster connector roadmap.
 
-**Datahash.**
+Value for Money: 7/10. Solid EU pick. Pick Stape if EU residency isn't a hard requirement.
 
-**What it is:** a fast Meta-focused CAPI relay.
+Pricing: From €19/mo.
 
-**What it does well:** the fastest CAPI setup in the category, with strong hashed-PII match quality.
+---
 
-**Where it breaks:** it is almost exclusively a Meta tool, so Google, TikTok and LinkedIn need separate solutions. No bot filtering, so better-matched bot events reach Meta more efficiently. Pricing is opaque beyond a free plan and a 28-day trial too short to run a real before-and-after.
+**12. ServerTrack**
 
-**Value for money:** 5/10.
+The Good: Lowest entry pricing in the category at $10/mo for 500K events with all server costs baked in. No separate Cloud Run bill. Good budget pick for tiny sites.
 
-**Pricing:** free plan, paid tiers undisclosed.
+Frustrations: Very thin third-party review footprint. No real G2, Capterra, or Trustpilot presence. Almost all "reviews" are on the vendor site.
 
-**Cometly.**
+Wish List: Real third-party social proof.
 
-**What it is:** a CAPI relay with attribution, and the vendor behind half the listicles you found before this one.
+Value for Money: 6/10. Cheap. Risky.
 
-**What it does well:** a solid CAPI relay with attribution reporting layered on.
+Pricing: From $10/mo.
 
-**Where it breaks:** no bot filtering, so contaminated events pass straight to Meta. Pricing is opaque, with a published $199-$499/month range that conflicts with a $500/month sales floor. No multi-domain attribution, so agencies pay per account. EU brands report a visible conversion drop after GDPR banners with no anonymous session layer to recover non-PII data.
+---
 
-**Value for money:** 5/10.
+**13. SignalBridge**
 
-**Pricing:** custom, roughly $199-$500/month entry.
+The Good: Recovers 20 to 40% of ad-blocked and iOS-killed conversions per their case studies. One quoted customer recovered 33%.
 
-### Tier 4: attribution and modelling platforms
+Frustrations: Tiny review footprint. No G2 reviews of substance. Capterra page is essentially empty.
 
-These do not primarily exist to be CAPI tools, but they show up in CAPI searches, so here is the honest read.
+Wish List: More public proof.
 
-**SegmentStream.**
+Value for Money: 6.5/10. Promising. Needs more sunlight.
 
-**What it is:** AI-driven probabilistic attribution that also pipes signals to CAPI.
+Pricing: Quote only.
 
-**What it does well:** genuine cookieless-compatible measurement, one of the few platforms that markets that path honestly, and useful MCP-native integrations.
+---
 
-**Where it breaks:** it ends at the consent gate. Rejected-consent sessions produce no event and are excluded from the model entirely. Bot handling is partial, down-weighting anomalies without a real IVT filter. The $5,000/month floor prices out the mid-market that would benefit most, and the black-box model creates stakeholder credibility problems.
+## Tier 3: sGTM hosting (the build-your-own crowd)
 
-**Value for money:** 5/10.
+Server-side GTM is the raw, flexible foundation. These tools host the container so you don't have to.
 
-**Pricing:** from $5,000/month.
+**14. Stape and Stape.io**
 
-**Hyros.**
+The Good: Cheapest fully-managed sGTM hosting. $17/mo Pro for 500K requests. $83/mo Business for 5M. Versus $100 to $200+/mo on raw GCP. Big community, lots of templates.
 
-**What it is:** revenue-focused multi-touch attribution for direct-response advertisers.
+Frustrations: Trustpilot reviews flag predatory renewal terms. Users say cancellations are hard to process and support sometimes "just copy-pastes generic answers". Email-only 2FA.
 
-**What it does well:** builds its graph from click IDs rather than third-party cookies, giving it some cookieless resilience, and gives Meta cleaner revenue signals than GA4's session model.
+Wish List: Real 2FA. Cleaner cancellation.
 
-**Where it breaks:** bot handling is only partial, implicit down-weighting with no explicit IVT filter before CAPI. Its accuracy degrades hard in the EU because the click IDs it depends on are suppressed in consent-rejected and iOS private-relay sessions. Revenue-anchored pricing punishes high-AOV, low-volume brands. All pricing requires a sales demo.
+Value for Money: 7.5/10. Best price-to-power in sGTM hosting. Watch the renewal.
 
-**Value for money:** 6/10 for US direct response, 3/10 for EU-serving brands.
+Pricing: $17/mo Pro. $83/mo Business.
 
-**Pricing:** Business from $230/month, Shopify track from $69/month.
+---
 
-**Northbeam.**
+**15. Addingwell (acquired by Didomi April 2025)**
 
-**What it is:** multi-touch attribution for high-spend DTC.
+The Good: Free tier covers 100,000 requests/month. Generous for testing or very small sites. Didomi backing adds enterprise polish.
 
-**What it does well:** best-in-class MTA reporting for brands spending serious media budget.
+Frustrations: No SOC 2 or HIPAA. Regulated-industry buyers are blocked regardless of price.
 
-**Where it breaks:** it feeds budget decisions but does not relay to CAPI, so it is barely a CAPI tool at all. Bot handling is partial with no published methodology, so sophisticated bots enter the touchpoint model. The $1,500/month floor and pageview-based pricing punish the mid-market. A 14-to-30-day model warm-up means a blind period at onboarding.
+Wish List: SOC 2 Type II. HIPAA.
 
-**Value for money:** 5/10.
+Value for Money: 7/10. Good choice if compliance isn't a hard gate.
 
-**Pricing:** Starter $1,500/month.
+Pricing: Free up to 100K req/mo. Paid tiers above.
 
-**Lifesight.**
+---
 
-**What it is:** an attribution and identity-resolution CDP.
+**16. Google Tag Manager Server-Side**
 
-**What it does well:** a powerful MTA and MMM stack with deep identity enrichment.
+The Good: Most flexible server-side stack on the market. Full control over event transformation, deduplication, consent gating. Free Google product, you only pay infra.
 
-**Where it breaks:** it markets itself as cookieless, but its identity graph relies on hashed email and mobile device IDs, which need explicit consent under GDPR, so the cookieless framing is misleading for EU-global brands. No bot filtering, so any session with a matched device ID is treated as human, bots included. Custom-only pricing with no published tiers.
+Frustrations: Setup fees commonly $1,000 to $10,000 before the first event flows. Developer time runs $80 to $120/hr at 50 to 120 hours. Not no-code in any honest sense.
 
-**Value for money:** 5/10.
+Wish List: A no-code wrapper from Google itself.
 
-**Pricing:** custom, reportedly $2,000-$5,000/month entry.
+Value for Money: 6.5/10. Powerful. Slow. Painful for non-engineers.
 
-**Polar Analytics.**
+Pricing: Free product. $1,000 to $10,000 setup. ~$50 to $200/mo Cloud Run.
 
-**What it is:** a Shopify-native warehouse BI and CAPI tool.
+---
 
-**What it does well:** genuinely strong warehouse-native BI for Shopify, with a CAPI Enhancer that recovers 40-50% more abandonment events.
+**17. Google Tag Gateway (launched January 2026)**
 
-**Where it breaks:** no bot validation, so the recovered events and the AI identity-graph enrichment include whatever bot fraction was in the browser data, which trains Meta on fake high-intent profiles. GMV-based pricing gets expensive fast, BI alone starts at $510/month, and incrementality testing is a separate $4,000/month.
+The Good: Genuinely free. Google charges nothing for the gateway itself. You only pay your CDN or cloud costs (typically $0 to $100/mo on Cloudflare or your own infra). Native Google Ads CAPI fan-out.
 
-**Value for money:** 6/10.
+Frustrations: Google-only. Does NOT route Meta CAPI, TikTok, Pinterest, or any non-Google endpoint. So you still need a separate solution for the rest of your stack.
 
-**Pricing:** from about $400/month.
+Wish List: Multi-platform fan-out. They won't ship it.
 
-**Triple Whale.**
+Value for Money: 7/10. Free is free. Just don't expect it to do Meta.
 
-**What it is:** the most complete Shopify attribution and CAPI stack in the SMB range.
+Pricing: Free. CDN costs only.
 
-**What it does well:** a genuinely broad platform, analytics, attribution, creative analytics and CAPI relay through Sonar in one place.
+---
 
-**Where it breaks:** no documented bot detection in the pixel or Sonar relay, so Sonar's whole pitch of enriching and amplifying CAPI signal also amplifies bot events to Meta with higher confidence. More signal is also more noise. The Triple Pixel is cookie-dependent and blocked CMP scripts hide 30-40% of Brave/uBlock sessions. GMV-based pricing escalates sharply above $5M.
+## Tier 4: Attribution platforms (with CAPI built in)
 
-**Value for money:** 6/10.
+These are not really "no-code CAPI tools". They are full attribution and measurement stacks where CAPI is one feature.
 
-**Pricing:** Starter $179/month annual, Advanced $259/month.
+**18. Northbeam**
 
-## Decision guide
+The Good: Multi-touch attribution plus MMM+ plus Profit Benchmarks plus creative analytics in one platform. Most complete enterprise-grade stack for DTC.
 
-Shopify SMB that just needs events flowing cheaply, US traffic only: Littledata or Analyzify will do the relay job.
+Frustrations: Starts at $1,500/mo and scales to $5K to $10K+. Pure non-starter for sub-$1M ARR brands or sub-$20K/mo media spend.
 
-Shopify or DTC brand that runs paid ads and wants Meta optimizing on real humans: DataCops. The bot filtering pays for itself in one ad cycle.
+Wish List: SMB tier.
 
-Google-only advertiser: Google Tag Gateway, free, and add nothing else until you go multi-platform.
+Value for Money: 7/10. Worth it at scale. Skip below $1M ARR.
 
-Agency running many accounts that needs clean data across all of them: DataCops, because per-account relay pricing and unfiltered streams compound badly at scale.
+Pricing: $1,500/mo+.
 
-Enterprise with a data team and a warehouse: Snowplow for collection, with a CAPI layer on top to close the loop.
+---
 
-You need an engineer and total control: server-side GTM. Just budget the real $8,000-$25,000, not the "free" line.
+**19. SegmentStream**
 
-Any EU traffic at all: pick a tool with two-tier consent isolation built in, not bolted on. That short-lists DataCops and Snowplow.
+The Good: AI-powered cross-channel attribution that reviewers say closely matches reality. Strong incrementality measurement. Now positioning as "measurement brain for AI agents". Fast support.
 
-## You optimized the match. You never checked the human.
+Frustrations: Pricing is enterprise-tier. Online starts at $800/mo, Full Funnel at $1,200/mo, Enterprise at $10,000/mo (annual only). Dashboard occasionally flaky.
 
-The mistake nearly everyone makes: treating CAPI as a delivery problem. "How do I get my events to Meta, no-code, cheap, with a great match score." Every tool on this list answers that. It is the wrong question.
+Wish List: SMB tier under $500/mo.
 
-The right question is what you are delivering. A perfectly matched, server-side, no-code feed of bot-contaminated conversions is not a win. It is a high-speed pipeline for making your ad account worse, and the better the EMQ, the faster it works.
+Value for Money: 7/10. Worth the cash if you're spending $1M+/yr on media.
 
-So go pull your last 1,000 conversion events. How many came from datacenter IPs? How many share a device fingerprint? How many fired with no consent state at all? If you cannot answer, your CAPI tool has been doing its job and hiding the only thing that matters. Easy was never the hard part. Clean is.
+Pricing: $800 to $10,000/mo annual.
+
+---
+
+**20. Hyros**
+
+The Good: Reportedly highest tracked-revenue attribution % of any tested platform. Agencies cite 70% attribution within weeks, 85% with optimization.
+
+Frustrations: No self-serve signup. Every customer must sit through a sales demo before seeing pricing. Heavy CRM-tinged sales flow.
+
+Wish List: Public pricing. Self-serve trial.
+
+Value for Money: 6/10. The data quality is real. The buying experience is painful.
+
+Pricing: Quote only. Reports vary $1,000 to $5,000/mo.
+
+---
+
+**21. Lifesight**
+
+The Good: Combines causal MMM, incrementality testing, and calibrated multi-touch attribution in one engine. Rare three-method validation.
+
+Frustrations: No public pricing. Every quote is sales-led and bundled to your "data and marketing maturity", making comparison painful.
+
+Wish List: Public pricing.
+
+Value for Money: 7/10. Strong methodology. Painful procurement.
+
+Pricing: Quote only.
+
+---
+
+**22. Snowplow**
+
+The Good: Open-source Community Edition gives you full schema control and data ownership. You own every event in your warehouse. Used by enterprises with serious data teams.
+
+Frustrations: Steep learning curve. G2, TrustRadius, and Capterra reviewers all call it out. Quite technical profiles needed for initial setup.
+
+Wish List: Better managed-service onboarding.
+
+Value for Money: 7.5/10. Best in class if you have data engineers. Painful if you don't.
+
+Pricing: OSS free. Cloud paid tiers from ~$1,500/mo.
+
+---
+
+**23. Conversios**
+
+The Good: Broad multi-platform fan-out. GA4, Google Ads, Meta, TikTok, Snapchat from one dashboard. Pre-configured GA4 events.
+
+Frustrations: Highly polarized reviews. One detailed merchant report cites €4,400 burned in Meta "learning phases" over 2.5 months before the team caught configuration issues.
+
+Wish List: Better post-install validation.
+
+Value for Money: 5.5/10. Risky pick. Test before scaling spend.
+
+Pricing: From $99/mo.
+
+---
+
+## Tier 5: First-party trust infrastructure (CAPI plus the layer underneath)
+
+This tier collapses CAPI plus analytics plus fraud filter plus consent into one stack. Different shape from everything above.
+
+**24. DataCops**
+
+The Good: True first-party CNAME tracking. JS served from your own subdomain (datacops.yourdomain.com), surviving iOS Safari ITP and ad blockers in a way most Shopify-app pixels do not. Server-side CAPI to Meta, Google Ads, TikTok, and LinkedIn. Server-side event deduplication and EMQ optimization. Bot and VPN traffic filtered before it hits CAPI, which means cleaner ad-platform data and lower wasted match attempts. IP database with 146.4B datacenter, 202B residential, and 11.9B VPN IPs. TCF 2.2 certified CMP bundled in. Free tier is real (2,000 sessions/mo, no card).
+
+Frustrations: SOC 2 Type II is in progress, not complete. Brand is newer than Stape or Elevar. Fewer enterprise integrations than Tealium, Segment, or mParticle. Currently 4 CAPI platforms (Meta, Google, TikTok, LinkedIn). No Pinterest yet. No Snapchat yet.
+
+Wish List: Faster SOC 2. More CAPI platforms. Public DSAR API (planned).
+
+Value for Money: 8.5/10. Bundles four vendor categories into one. Free tier wins the demo.
+
+Pricing: Free. $7.99/mo Growth (5K sessions). $49/mo Business (50K sessions, HubSpot). $299/mo Organization (300K sessions). Enterprise custom.
+
+---
+
+**25. Meta's 1-click CAPI (April 15, 2026)**
+
+The Good: Genuinely 1-click inside Events Manager. Free. Native deduplication with the Pixel.
+
+Frustrations: Meta-only. Does not route Google, TikTok, LinkedIn. Limited event transformation. EMQ tuning is opaque.
+
+Wish List: It won't ever fan out beyond Meta. That's the whole point.
+
+Value for Money: 7.5/10. Free Meta CAPI. Just don't expect more.
+
+Pricing: Free.
+
+---
+
+## So what should you actually use?
+
+There are a lot of tools here. No clean winner. The real question is what you actually need.
+
+* Want free Meta CAPI today? Use Meta's 1-click in Events Manager.
+
+* Want free Google Ads CAPI? Google Tag Gateway covers it.
+
+* Need both, plus TikTok and LinkedIn, on a budget? DataCops free tier or Stape Pro at $17/mo.
+
+* Running a 7-figure Shopify store and want long-window match recovery? Aimerce or Elevar.
+
+* Running subscriptions on Recharge? Littledata.
+
+* Spending $50K+/mo on paid media and want true MTA? Cometly, Northbeam, or SegmentStream.
+
+* Have data engineers and want full schema ownership? Snowplow.
+
+* Want CAPI plus bot filtering plus consent in one tool? DataCops.
+
+* Compliance-led enterprise procurement? Wait on DataCops SOC 2 or use Tealium as a placeholder.
+
+DataCops is not a Shopify-app replacement. It's the layer underneath. Keep your dashboard. Keep your Klaviyo. Plug DataCops in for ad-blocker-immune CNAME tracking, server-side CAPI, bot filtering, and first-party consent on one pipeline.
+
+---
+
+## The mistake I see people make
+
+The mistake is treating CAPI as a tool problem. It's actually a data quality problem. People shop for the cheapest router that "sends events to Meta", switch on, and assume they're done. Then their EMQ sits at 5.2 because half the events have no email, no phone, and no fbp cookie. Or they don't notice that bots are inflating their CAPI conversions, which trains Meta's algorithm on fake purchases, which burns budget on lookalikes that don't convert. Server-side fan-out without a fraud filter underneath is just "more efficient garbage". Pick a stack that filters before it fans out.
+
+---
+
+## Now your turn
+
+What's your CAPI stack right now? Are you on the Meta 1-click plus Google Tag Gateway free path, or still paying for a router? Drop your setup (or your horror story) below.
 
 ---
 
